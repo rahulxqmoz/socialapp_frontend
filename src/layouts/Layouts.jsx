@@ -78,7 +78,7 @@ const Layout = () => {
 
   useEffect(() => {
    
-    const ws = new WebSocket(`ws://connectifyapp.xyz/ws/notifications/${userId}/`);
+    const ws = new WebSocket(`wss://connectifyapp.xyz/ws/notifications/${userId}/`);
 
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -112,7 +112,7 @@ const Layout = () => {
   useEffect(() => {
     // Setup WebSocket connection for real-time unread counts
     if (user && token){
-    const wsUrl = `ws://connectifyapp.xyz/ws/unreadnotifications/${user.id}/?token=${token}`;
+    const wsUrl = `wss://connectifyapp.xyz/ws/unreadnotifications/${user.id}/?token=${token}`;
     const notificationSocket = new WebSocket(wsUrl);
 
     notificationSocket.onopen = () => {
@@ -148,7 +148,7 @@ const Layout = () => {
  
 
   useEffect(() => {
-    const callSocket = new WebSocket(`ws://connectifyapp.xyz/ws/call/${userId}/?token=${token}`);
+    const callSocket = new WebSocket(`wss://connectifyapp.xyz/ws/call/${userId}/?token=${token}`);
 
     callSocket.onmessage = (event) => {
       const data = JSON.parse(event.data);
