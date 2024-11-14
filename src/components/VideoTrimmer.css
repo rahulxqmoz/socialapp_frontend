@@ -1,0 +1,25 @@
+/* VideoTrimmer.css */
+
+.video-trimmer {
+    margin: 20px;
+  }
+  
+  video {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 10px;
+  }
+  
+  .nouislider {
+    margin: 20px 0;
+  }
+  
+  button {
+    margin: 5px;
+    padding: 8px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  

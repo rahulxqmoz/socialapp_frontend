@@ -1,0 +1,7 @@
+.emoji-picker {
+    width: 400px; /* Set your desired width */
+    height: auto; /* Let height adjust automatically */
+    max-height: 350px; /* Optional: limit maximum height */
+    overflow: auto; /* Allow scrolling if content exceeds max height */
+  }
+  

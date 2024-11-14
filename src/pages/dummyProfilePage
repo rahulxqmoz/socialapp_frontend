@@ -1,0 +1,485 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
+import { BASE_URL } from '../config';
+import Modal from 'react-modal';
+import 'cropperjs/dist/cropper.css';
+import { logout, updateUserProfileImage } from '../features/auth/userSlice';
+import { showErrorToast } from '../components/ErroToast';
+import ImageCropper from '../components/Cropper';
+import 'react-quill/dist/quill.snow.css';
+import PostBox from '../components/ProfilePageComponents/PostBoxComponent';
+import { showSuccessToast } from '../components/CustomToast';
+import ProfileHeader from '../components/ProfilePageComponents/ProfileHeader';
+import ProfileSection from '../components/ProfilePageComponents/ProfileSection';
+import PostListComponent from '../components/ProfilePageComponents/PostListComponent';
+import { useNavigate } from 'react-router-dom';
+import { fetchProfile, fetchPosts, fetchBookmarks } from '../features/auth/profileSlice';
+
+
+Modal.setAppElement('#root');
+
+const DummyProfilePage = () => {
+  //const [profile, setProfile] = useState(null);
+  //const [error, setError] = useState(null);
+  //const [posts, setPosts] = useState([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalImage, setModalImage] = useState('');
+  const [openCommentId, setOpenCommentId] = useState(null); 
+  const [imageType, setImageType] = useState(''); // 'cover' or 'profile'
+  const cropperRef = useRef(null);
+  const [likedPosts, setLikedPosts] = useState({});   
+  const [comments, setComments] = useState({}); 
+  const [newComment, setNewComment] = useState(""); 
+  const [replyingToCommentId, setReplyingToCommentId] = useState(null); 
+  const user = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.auth.token);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  //const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarkPosts, setbookmarkPosts] = useState({});  
+  //const [loading, setLoading] = useState(false);
+  const { profile, posts, bookmarks, error, loading } = useSelector((state) => state.profile);
+
+  const dispatch = useDispatch()
+  const navigate=useNavigate();
+
+  const fetchBookmarks = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/bookmarks`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+      });  // Fetch user's bookmarks
+      setBookmarks(response.data.map(bookmark => bookmark.post));
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+    }
+  };
+  const fetchComments = async (postId) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/posts/${postId}/comments/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setComments((prevComments) => ({
+        ...prevComments,
+        [postId]: response.data,
+        
+      }));
+    } catch (error) {
+      console.log("Error fetching comments");
+    }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/posts/?user_id=${user.id}`, {
+     headers: {
+         Authorization: `Bearer ${token}`,
+     },
+   });
+     setPosts(response.data); 
+     console.log(response.data)// Set the fetched posts
+   } catch (err) {
+     console.log("Error fetching posts");
+   }
+  };
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/users/profile/${user?.id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+       
+        setProfile(response.data);
+        setFollowerCount(response.data.followers);
+        setFollowingCount(response.data.following);
+      } catch (err) {
+        console.log(`errorstatus:${err.response.status}`)
+        if (err.response?.status === 401) {
+          showErrorToast("Session timed out!.Please login agian.")
+          setTimeout(() => {
+            handleLogout(); 
+          }, 1000);
+        } else {
+          
+          setError(err.response?.data?.detail || 'An error occurred while fetching the profile.');
+        }
+      }
+    };
+
+    if (user && token) {
+      fetchProfile();
+      fetchPosts();
+      fetchBookmarks();
+    }
+  }, [user, token]);
+
+  useEffect(() => {
+    if (posts.length > 0) {
+      posts.forEach((post) => {
+        console.log(`Correct post id: ${post.id}`);
+        fetchComments(post.id);
+      });
+    }
+  }, [posts]);
+
+  useEffect(() => {
+    const fetchLikeStatus = async () => {
+      try {
+        const likeStatuses = {};
+        for (let post of posts) {
+          const response = await fetch(`${BASE_URL}/api/posts/${post.id}/check_liked/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            likeStatuses[post.id] = result.liked; // Assume the response contains { liked: true/false }
+            console.log('check liked');
+            console.log(result);
+          }
+        }
+        setLikedPosts(likeStatuses);
+      } catch (error) {
+        console.error('Error fetching like status:', error);
+      }
+    };
+
+    const fetchBookmarkStatus = async () => {
+      try {
+        const bookmarkPosts = {};
+        for (let post of posts) {
+          const response = await fetch(`${BASE_URL}/api/posts/${post.id}/check_bookmarked/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            bookmarkPosts[post.id] = result.bookmarked; // Assume the response contains { liked: true/false }
+           
+          }
+        }
+        setbookmarkPosts(bookmarkPosts);
+      } catch (error) {
+        console.error('Error fetching like status:', error);
+      }
+    };
+
+    fetchLikeStatus();
+    fetchBookmarkStatus();
+  }, [posts, token,user]);
+
+  const handleLogout=()=>{
+    dispatch(logout());
+    navigate('/login')
+  }
+
+
+  const handleFileChange = (event, type) => {
+    const fileInput = event.target;
+    const file = event.target.files[0];
+    if (file) {
+      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!validImageTypes.includes(file.type)) {
+        // setError('Please select a valid image file (JPEG, JPG, or PNG).');
+        showErrorToast('Please select a valid image file (JPEG, JPG, or PNG).');
+        fileInput.value = null; 
+        return;
+      }
+    }
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setModalImage(reader.result);
+        setImageType(type);
+        setModalIsOpen(true);
+        fileInput.value = null; 
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.error('No file selected.');
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!cropperRef.current) return;
+
+    const cropper = cropperRef.current.cropper;
+    const canvas = cropper.getCroppedCanvas();
+    canvas.toBlob(async (blob) => {
+      const formData = new FormData();
+      formData.append(imageType === 'cover' ? 'cover_pic' : 'profile_pic', blob, 'cropped-image.jpg');
+
+      try {
+        await axios.patch(`${BASE_URL}/api/users/profile/update/`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        const updatedImageURL = URL.createObjectURL(blob);
+        setProfile((prevProfile) => ({
+          ...prevProfile,
+          [imageType === 'cover' ? 'cover_pic' : 'profile_pic']: updatedImageURL,
+        }));
+
+        // Dispatch the action to update the Redux store
+        if (imageType === 'profile') {
+          dispatch(updateUserProfileImage(updatedImageURL));
+        }
+
+        closeModal();
+
+      } catch (err) {
+        setError('An error occurred while uploading the image.');
+      }
+    }, 'image/jpeg');
+  };
+
+
+  const openModal = (type) => {
+    setImageType(type);
+    document.getElementById(`${type}-upload`).click(); // Trigger the file input click
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setModalImage('');
+  };
+
+  if (error) {
+    return <div className="text-red-500 text-center mt-4">{error}</div>;
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
+      </div>
+    );
+  }
+  
+
+  const handleNewPost = async (postData) => {
+    const userId = user.id;
+    setLoading(true);  
+    if (!postData.content || postData.content.trim() === '') {
+      showErrorToast("Content cannot be empty.");
+      setLoading(false); 
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append('content', postData.content);
+      formData.append('user', user.id);
+
+      if (postData.image) {
+        const imageBlob = await fetch(postData.image).then((res) => res.blob());
+        formData.append('image', imageBlob, 'post.jpg');
+      }
+  
+      console.log(`video:${postData.video}`)
+      if (postData.video) {
+        const videoBlob = await fetch(postData.video).then((res) => res.blob());
+        const videoSizeMB = videoBlob.size / (1024 * 1024);
+        if (videoSizeMB > 100) {
+          showErrorToast("Video size exceeds 100MB. Please upload a smaller file.");
+          setLoading(false); 
+          return; 
+        }
+        formData.append('video', videoBlob, 'post.mp4');
+      }
+      formData.append('is_approved', true);
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+      const response = await axios.post(`${BASE_URL}/api/posts/`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      setPosts((prevPosts) => [response.data, ...prevPosts]);
+      showSuccessToast("Post successfully submitted");
+    } catch (err) {
+       showErrorToast("Error while submitting!")
+    }finally {
+      setLoading(false);  
+    }
+  };
+  const handleLike = async  (postId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/likes/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ post: postId }),
+      });
+
+      if (response.status === 201) {
+        console.log('Post liked');
+        setLikedPosts((prev) => ({ ...prev, [postId]: true }));
+      } else if (response.status === 204) {
+        console.log('Post unliked');
+        setLikedPosts((prev) => ({ ...prev, [postId]: false }));
+      } else {
+        console.log('Error:', await response.json());
+      }
+      fetchPosts();
+    } catch (error) {
+      console.error('Error liking/unliking post:', error);
+    }
+  };
+
+
+
+  const handleSubmitComment = async (postId, commentText, parentId = null) => {
+    if (!commentText.trim()) {
+      showErrorToast('Empty Comment Box');
+      return;
+    }
+    console.log(postId,commentText,user.id,parentId,token);
+    try {
+      const response = await axios.post(`${BASE_URL}/api/comments/`, {
+        post: postId,
+        content: commentText,
+        user: user.id,
+        parent: parentId, // Include parentId here
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const newCommentData = response.data;
+      setComments((prevComments) => ({
+        ...prevComments,
+        [postId]: [...(prevComments[postId] || []), newCommentData],
+      }));
+  
+      setNewComment("");
+      setReplyingToCommentId(null);
+     
+      showSuccessToast("Comment submitted successfully");
+      fetchPosts();
+    } catch (error) {
+      showErrorToast("Error submitting comment");
+    }
+  };
+  const handleToggleComments = (postId) => {
+    if (openCommentId === postId) {
+      setOpenCommentId(null); // Close the comments section if it's already open
+    } else {
+      setOpenCommentId(postId); // Open the comments section for the specific post
+    }
+  };
+
+  const handleAddEmoji = (emoji) => {
+    setCommentText((prev) => prev + emoji.native); // Append the selected emoji to the comment text
+  };
+ 
+
+  const handleBookmark = async (postId) => {
+    try {
+      
+      if (bookmarkPosts[postId]) {
+        // If already bookmarked, unbookmark the post
+        await axios.delete(`${BASE_URL}/api/bookmarks/${postId}`,{
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+        });
+        setbookmarkPosts((prevState) => ({
+          ...prevState,
+          [postId]: false,
+        }));
+        showErrorToast('Post removed from Bookmarks');
+      } else {
+        // If not bookmarked, bookmark the post
+        await axios.post(`${BASE_URL}/api/bookmarks/`, { post: postId }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setbookmarkPosts((prevState) => ({
+          ...prevState,
+          [postId]: true,
+        }));
+        showSuccessToast('Added to Bookmarks');
+      }
+    } catch (error) {
+      console.error('Error updating bookmark:', error);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto bg-white shadow-md rounded-md overflow-hidden mt-8">
+      
+    {/* Profile Header */}
+  
+    <ProfileHeader profile={profile} handleFileChange={handleFileChange} openModal={openModal}/>
+    {/* Profile Details */}
+  <div className="p-4 sm:p-6">
+    {/* Profile Section */}
+    <ProfileSection user={user} profile={profile} followerCount={followerCount} followingCount={followingCount}/>
+{loading && (
+      <div className="flex justify-center items-center mb-2">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
+      </div>
+    )}
+    {/* PostBox Section */}
+    <PostBox onPostSubmit={handleNewPost} />
+
+  
+   
+      <PostListComponent 
+      posts={posts}
+      user={user}
+      likedPosts={likedPosts}
+      handleLike={handleLike}
+      handleToggleComments={handleToggleComments}
+      handleBookmark={handleBookmark}
+      bookmarkPosts={bookmarkPosts}
+      openCommentId={openCommentId}
+      handleSubmitComment={handleSubmitComment}
+      replyingToCommentId={replyingToCommentId}
+      setReplyingToCommentId={setReplyingToCommentId}
+      setCommentText={setCommentText}
+      setShowEmojiPicker={setShowEmojiPicker}
+      showEmojiPicker={showEmojiPicker}
+      handleAddEmoji={handleAddEmoji}
+      comments={comments}
+      commentText={commentText}
+      />
+   
+  </div>
+
+  {/* Cropper Modal */}
+  <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="w-full max-w-2xl mx-auto mt-16">
+    <ImageCropper modalImage={modalImage} onSave={handleImageUpload} onClose={closeModal} ref={cropperRef} />
+  </Modal>
+</div>
+
+  );
+};
+
+export default DummyProfilePage;
