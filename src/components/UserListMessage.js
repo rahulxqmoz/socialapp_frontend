@@ -24,7 +24,7 @@ const UserList = ({ onUserSelect,onCreateGroup  }) => {
 
   useEffect(() => {
     // Setup WebSocket connection for real-time unread counts
-    const wsUrl = `ws://localhost:8000/ws/unreadnotifications/${user.id}/?token=${token}`;
+    const wsUrl = `wss://connectifyapp.xyz/ws/unreadnotifications/${user.id}/?token=${token}`;
     const notificationSocket = new WebSocket(wsUrl);
 
     notificationSocket.onopen = () => {
