@@ -59,7 +59,7 @@ const markMessagesAsRead = (messageId) => {
     if (roomId && token) {
        
       // Establish WebSocket connection
-      socketRef.current =new WebSocket(`ws://localhost:8000/ws/groupchat/${roomId}/?token=${token}`);  // Adjust based on your backend server URL
+      socketRef.current =new WebSocket(`wss://connectifyapp.xyz/ws/groupchat/${roomId}/?token=${token}`);  // Adjust based on your backend server URL
     
 
       socketRef.current.onopen = () => {
