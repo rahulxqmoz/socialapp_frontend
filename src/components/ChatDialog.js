@@ -66,7 +66,7 @@ const startVideoCall =()=>{
             });
         }
        // WebSocket connection setup
-        socketRef.current = new WebSocket(`ws://localhost:8000/ws/chat/${roomName}/?token=${token}`);
+        socketRef.current = new WebSocket(`wss://connectifyapp.xyz/ws/chat/${roomName}/?token=${token}`);
 
         socketRef.current.onopen = () => {
             console.log("WebSocket connection opened");
