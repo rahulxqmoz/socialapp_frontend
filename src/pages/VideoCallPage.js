@@ -37,7 +37,7 @@ const VideoCall = () => {
 
     useEffect(() => {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        ws.current = new WebSocket(`${wsProtocol}://localhost:8000/ws/video-call/${currentUser.id}/${userId}/?token=${token}`);
+        ws.current = new WebSocket(`${wsProtocol}://connectifyapp.xyz/ws/video-call/${currentUser.id}/${userId}/?token=${token}`);
 
         ws.current.onopen = () => {
             console.log("WebSocket connection established.");
@@ -91,7 +91,7 @@ const VideoCall = () => {
 
 
     useEffect(() => {
-        const callSocket = new WebSocket(`ws://localhost:8000/ws/call/${currentUser.id}/?token=${token}`);
+        const callSocket = new WebSocket(`wss://connectifyapp.xyz/ws/call/${currentUser.id}/?token=${token}`);
     
         callSocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
