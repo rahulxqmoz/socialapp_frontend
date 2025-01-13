@@ -2,6 +2,19 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app), using the [Redux](https://redux.js.org/) and [Redux Toolkit](https://redux-toolkit.js.org/) template.
 
+### Deploying to Vercel
+- The frontend is hosted on [Vercel](https://vercel.com/), and connected to the backend API via the domain `https://your-backend-domain.com`.
+- Ensure that the backend is running and the API endpoints are accessible before connecting the frontend to the backend.
+
+### Environment Variables
+Make sure to add the necessary environment variables for API connections:
+- `REACT_APP_API_URL`: The URL of your backend API (e.g., `https://your-backend-domain.com`).
+
+You can set these variables in `.env` file in the root directory:
+```bash
+REACT_APP_API_URL=https://your-backend-domain.com
+```
+
 ## Available Scripts
 
 In the project directory, you can run:
@@ -39,8 +52,29 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
+
+## Frontend Features
+- **User Authentication**: Connects to the backend API for user login and registration.
+- **JWT Authentication**: Handles the JWT token for secure communication with the backend.
+- **Redux**: Manages the global state of the application, such as user authentication status, user data, and notifications.
+- **Responsive UI**: Optimized for both mobile and desktop platforms.
+  
+## API Endpoints Integration
+The frontend connects to the following backend API endpoints:
+
+- **User Authentication**: Uses /register/, /login/, and JWT token for authentication.
+- **Profile Management**: Integrates /profile/, /profile/update/, and /password/update/ endpoints.
+- **Admin Functions**: Accesses /admin/users/ and /admin/users/<pk>/block/ for admin management.
+ 
+## Deployment on Vercel
+- `Vercel will automatically deploy the app for every push to the main branch.`
+- `The app will be live and connected to your backend API.`
+
+
 ## Learn More
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+To learn about Redux Toolkit, check out the [Redux documentation](https://redux.js.org/).
