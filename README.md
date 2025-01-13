@@ -1,4 +1,6 @@
-# Getting Started with Create React App and Redux
+#Connectify - Socialmedia App React Frontend
+
+## Getting Started with Create React App and Redux
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app), using the [Redux](https://redux.js.org/) and [Redux Toolkit](https://redux-toolkit.js.org/) template.
 
@@ -62,9 +64,24 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 ## API Endpoints Integration
 The frontend connects to the following backend API endpoints:
 
-- **User Authentication**: Uses /register/, /login/, and JWT token for authentication.
-- **Profile Management**: Integrates /profile/, /profile/update/, and /password/update/ endpoints.
-- **Admin Functions**: Accesses /admin/users/ and /admin/users/<pk>/block/ for admin management.
+### User Authentication
+- **`/register/`**: User registration endpoint.
+- **`/login/`**: User login endpoint.
+- **`/token/`**: Obtain JWT token.
+- **`/token/refresh/`**: Refresh JWT token.
+
+### Profile Management
+- **`/profile/<user_id>/`**: Fetch user profile.
+- **`/profile/update/`**: Update profile details.
+- **`/password/update/`**: Update user password.
+
+### Admin Functions
+- **`/admin/users/`**: List all users (admin-only).
+- **`/admin/users/<pk>/block/`**: Block a user (admin-only).
+
+### More Endpoints
+For additional endpoints related to other features, please refer to the backend code in the project repository [Backend Repository](https://github.com/rahulxqmoz/SocialMediaAppBackend).
+
  
 ## Deployment on Vercel
 - `Vercel will automatically deploy the app for every push to the main branch.`
