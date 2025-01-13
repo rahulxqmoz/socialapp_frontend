@@ -1,4 +1,4 @@
-#Connectify - Socialmedia App React Frontend
+# Connectify - Socialmedia App React Frontend
 
 ## Getting Started with Create React App and Redux
 
